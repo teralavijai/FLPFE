@@ -29,15 +29,12 @@ export default function DashboardLayout() {
             />
 
             <SideNavigation collapsed={collapsed} />
-
+            
             <Box
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    ml: collapsed
-                        ? `${MINI_DRAWER_WIDTH}px`
-                        : `${DRAWER_WIDTH}px`,
-                    transition: "margin .2s",
+                    overflow: "auto",
                     p: 3,
                 }}
             >
