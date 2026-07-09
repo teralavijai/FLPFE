@@ -12,6 +12,11 @@ import CreateTrainingJobPage from "../features/training-jobs/pages/CreateTrainin
 import EditTrainingJobPage from "../features/training-jobs/pages/EditTrainingJobPage";
 import TrainingJobDetailsPage from "../features/training-jobs/pages/TrainingJobDetailsPage";
 
+import MLModelsPage from "../features/ml-models/pages/MLModelsPage";
+import CreateMLModelPage from "../features/ml-models/pages/CreateMLModelPage";
+import EditMLModelPage from "../features/ml-models/pages/EditMLModelPage";
+import MLModelDetailsPage from "../features/ml-models/pages/MLModelDetailsPage";
+
 export default function AppRoutes() {
     return (
         <Routes>
@@ -51,7 +56,22 @@ export default function AppRoutes() {
 
                 <Route
                     path="ml-models"
-                    element={<PlaceholderPage title="ML Models" />}
+                    element={<MLModelsPage />}
+                />
+
+                <Route
+                    path="ml-models/new"
+                    element={<CreateMLModelPage />}
+                />
+
+                <Route
+                    path="ml-models/:id"
+                    element={<MLModelDetailsPage />}
+                />
+
+                <Route
+                    path="ml-models/:id/edit"
+                    element={<EditMLModelPage />}
                 />
 
                 <Route

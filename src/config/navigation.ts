@@ -7,6 +7,7 @@ import StorageIcon from "@mui/icons-material/Storage";
 import DnsIcon from "@mui/icons-material/Dns";
 import PeopleIcon from "@mui/icons-material/People";
 import SettingsIcon from "@mui/icons-material/Settings";
+import MemoryIcon from "@mui/icons-material/Memory";
 
 import type { ElementType } from "react";
 
