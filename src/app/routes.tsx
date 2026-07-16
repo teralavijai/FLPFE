@@ -17,6 +17,8 @@ import CreateMLModelPage from "../features/ml-models/pages/CreateMLModelPage";
 import EditMLModelPage from "../features/ml-models/pages/EditMLModelPage";
 import MLModelDetailsPage from "../features/ml-models/pages/MLModelDetailsPage";
 
+import RuntimeMonitoringPage from "../features/runtime-monitoring/pages/RuntimeMonitoringPage";
+
 export default function AppRoutes() {
     return (
         <Routes>
@@ -75,9 +77,8 @@ export default function AppRoutes() {
                 />
 
                 <Route
-                    path="runtime"
-                    element={
-                        <PlaceholderPage title="Runtime Monitoring" />
+                    path="/runtime-monitoring"
+                    element={<RuntimeMonitoringPage />
                     }
                 />
 

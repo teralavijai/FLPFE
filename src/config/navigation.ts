@@ -40,7 +40,7 @@ const navigation: NavigationItem[] = [
     },
     {
         title: "Runtime Monitoring",
-        path: "/runtime",
+        path: "/runtime-monitoring",
         icon: MonitorHeartIcon,
     },
     {

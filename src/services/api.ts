@@ -12,9 +12,9 @@ import type {
  * 1. VITE_API_BASE_URL from .env
  * 2. Current backend URL
  */
-const BASE_URL =
-    import.meta.env.VITE_API_BASE_URL ??
-    "http://10.4.25.199:8090";
+import { REST_API_URL } from "../config/api";
+
+const BASE_URL = REST_API_URL;
 
 const api: AxiosInstance = axios.create({
     baseURL: BASE_URL,
