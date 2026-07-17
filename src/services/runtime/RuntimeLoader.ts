@@ -8,8 +8,12 @@ import type {
     TrainingEventPayload,
     ClientPayload,
     RuntimeStatusPayload,
+    TrainingJobStatusPayload,
 } from "../../types/runtime";
 
+import { queryClient } from "../../lib/react-query";
+
+import type { TrainingJob } from "../../features/training-jobs/types/trainingJob";
 export interface RuntimeLoaderOptions {
 
     url: string;
@@ -21,8 +25,6 @@ export interface RuntimeLoaderOptions {
     onClose?: () => void;
 
     onError?: (event: Event) => void;
-
-    onTrainingCompleted?: () => void;
 
 }
 
@@ -44,8 +46,6 @@ export default class RuntimeLoader {
 
     private readonly onError?: (event: Event) => void;
 
-    private readonly onTrainingCompleted?: () => void;
-
     constructor(options: RuntimeLoaderOptions) {
 
         this.url = options.url;
@@ -58,7 +58,43 @@ export default class RuntimeLoader {
 
         this.onError = options.onError;
 
-        this.onTrainingCompleted = options.onTrainingCompleted;
+    }
+
+    private updateTrainingJobCache(payload: TrainingJobStatusPayload,): void {
+
+        queryClient.setQueryData<TrainingJob[]>(
+            ["training-jobs"],
+            (oldJobs = []) =>
+
+                oldJobs.map(job =>
+
+                    job.id === payload.job_id
+
+                        ? {
+
+                            ...job,
+
+                            status: payload.status,
+
+                            current_round: payload.current_round,
+
+                            total_rounds: payload.total_rounds,
+
+                            started_at: payload.started_at,
+
+                            completed_at: payload.completed_at,
+
+                            best_accuracy: payload.best_accuracy,
+
+                            best_loss: payload.best_loss,
+
+                        }
+
+                        : job,
+
+                ),
+
+        );
 
     }
 
@@ -75,7 +111,9 @@ export default class RuntimeLoader {
                 this.socket.readyState === WebSocket.CONNECTING
             )
         ) {
+
             return;
+
         }
 
         this.manuallyClosed = false;
@@ -85,7 +123,9 @@ export default class RuntimeLoader {
         this.socket.onopen = () => {
 
             this.dispatch({
+
                 type: "CONNECTED",
+
             });
 
             this.onOpen?.();
@@ -107,7 +147,9 @@ export default class RuntimeLoader {
         this.socket.onclose = () => {
 
             this.dispatch({
+
                 type: "DISCONNECTED",
+
             });
 
             this.onClose?.();
@@ -153,7 +195,9 @@ export default class RuntimeLoader {
     private scheduleReconnect(): void {
 
         if (this.reconnectTimer !== null) {
+
             return;
+
         }
 
         this.reconnectTimer = window.setTimeout(() => {
@@ -182,11 +226,16 @@ export default class RuntimeLoader {
 
             envelope = JSON.parse(raw);
 
-        } catch (error) {
+        }
+
+        catch (error) {
 
             console.error(
+
                 "Invalid runtime websocket message",
+
                 error,
+
             );
 
             return;
@@ -194,6 +243,10 @@ export default class RuntimeLoader {
         }
 
         switch (envelope.type) {
+
+            //----------------------------------------------------------
+            // Training Round
+            //----------------------------------------------------------
 
             case "training_round":
 
@@ -208,6 +261,10 @@ export default class RuntimeLoader {
 
                 break;
 
+            //----------------------------------------------------------
+            // Client Metric
+            //----------------------------------------------------------
+
             case "client_metric":
 
                 this.dispatch({
@@ -221,30 +278,26 @@ export default class RuntimeLoader {
 
                 break;
 
-            case "training_event":
+            //----------------------------------------------------------
+            // Training Event
+            //----------------------------------------------------------
 
-                const trainingEvent =
-                    envelope.payload as TrainingEventPayload;
+            case "training_event":
 
                 this.dispatch({
 
                     type: "TRAINING_EVENT",
 
-                    payload: trainingEvent,
+                    payload:
+                        envelope.payload as TrainingEventPayload,
 
                 });
 
-                if (
-                    trainingEvent.event_type === "TRAINING_COMPLETED" ||
-                    trainingEvent.event_type === "TRAINING_FAILED" ||
-                    trainingEvent.event_type === "TRAINING_STOPPED"
-                ) {
-
-                    this.onTrainingCompleted?.();
-
-                }
-
                 break;
+
+            //----------------------------------------------------------
+            // Client
+            //----------------------------------------------------------
 
             case "client":
 
@@ -259,6 +312,47 @@ export default class RuntimeLoader {
 
                 break;
 
+            //----------------------------------------------------------
+            // Runtime Status
+            //----------------------------------------------------------
+
+                        //----------------------------------------------------------
+            // Training Job Status
+            //----------------------------------------------------------
+
+            case "training_job_status": {
+
+                const payload =
+                    envelope.payload as TrainingJobStatusPayload;
+
+                //
+                // Update React Query cache immediately so every page
+                // using useTrainingJobs() refreshes instantly.
+                //
+
+                this.updateTrainingJobCache(payload);
+
+                //
+                // Also publish to RuntimeContext in case any runtime
+                // component wants to react to job status changes.
+                //
+
+                this.dispatch({
+
+                    type: "TRAINING_JOB_STATUS",
+
+                    payload,
+
+                });
+
+                break;
+
+            }
+
+            //----------------------------------------------------------
+            // Runtime Status
+            //----------------------------------------------------------
+
             case "runtime_status":
 
                 this.dispatch({
@@ -271,12 +365,19 @@ export default class RuntimeLoader {
                 });
 
                 break;
+                
+            //----------------------------------------------------------
+            // Unknown
+            //----------------------------------------------------------
 
             default:
 
                 console.warn(
+
                     "Unknown runtime event:",
+
                     envelope.type,
+
                 );
 
         }

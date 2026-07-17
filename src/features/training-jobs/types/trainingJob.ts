@@ -43,6 +43,11 @@ export interface TrainingJob {
     best_accuracy?: number | null;
     best_loss?: number | null;
 
+    runtime_pid?: number | null;
+    runtime_port?: number | null;
+
+    failure_reason?: string | null;
+
     checkpoint_path?: string | null;
     best_model_path?: string | null;
 

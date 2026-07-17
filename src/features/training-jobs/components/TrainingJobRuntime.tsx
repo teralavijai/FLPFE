@@ -1,9 +1,16 @@
 import {
+    useEffect,
+    useState,
+} from "react";
+
+import {
     Card,
     CardContent,
     Grid,
     Typography,
 } from "@mui/material";
+
+import { formatRuntime } from "../../../utils/runtime";
 
 import type { TrainingJob } from "../types/trainingJob";
 
@@ -12,6 +19,36 @@ interface Props {
 }
 
 export default function TrainingJobRuntime({ job }: Props) {
+    const [, setTick] = useState(0);
+
+    useEffect(() => {
+
+        if (
+            job.status !== "RUNNING" ||
+            !job.started_at
+        ) {
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+
+            setTick(v => v + 1);
+
+        }, 1000);
+
+        return () => {
+
+            clearInterval(timer);
+
+        };
+
+    }, [
+
+        job.status,
+
+        job.started_at,
+
+    ]);
 
     return (
 
@@ -47,7 +84,15 @@ export default function TrainingJobRuntime({ job }: Props) {
                         </Typography>
 
                         <Typography>
-                            --
+
+                            {formatRuntime(
+
+                                job.started_at,
+
+                                job.completed_at,
+
+                            )}
+
                         </Typography>
 
                     </Grid>
@@ -59,7 +104,9 @@ export default function TrainingJobRuntime({ job }: Props) {
                         </Typography>
 
                         <Typography>
-                            --
+
+                            {job.runtime_pid ?? "--"}
+
                         </Typography>
 
                     </Grid>
@@ -71,8 +118,10 @@ export default function TrainingJobRuntime({ job }: Props) {
                         </Typography>
 
                         <Typography>
-                            --
-                        </Typography>
+
+                            {job.runtime_port ?? "--"}
+
+                        </Typography> 
 
                     </Grid>
 

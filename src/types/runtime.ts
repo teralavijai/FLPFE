@@ -7,19 +7,22 @@ export type RuntimeEventType =
     | "training_event"
     | "client_metric"
     | "client"
-    | "runtime_status";
+    | "runtime_status"
+    | "training_job_status";
 
 // ===============================================
 
-export interface RuntimeEnvelope<T = unknown> {
+export interface RuntimeEnvelope {
 
-    version: number;
+    type:
+        | "training_round"
+        | "client_metric"
+        | "training_event"
+        | "client"
+        | "runtime_status"
+        | "training_job_status";
 
-    type: RuntimeEventType;
-
-    timestamp: string;
-
-    payload: T;
+    payload: unknown;
 
 }
 
@@ -135,6 +138,36 @@ export interface RuntimeStatusPayload {
 
 }
 
+// ======================================================================
+// Training Job Runtime Status
+// ======================================================================
+export interface TrainingJobStatusPayload {
+
+    job_id: number;
+
+    status:
+        | "CREATED"
+        | "STARTING"
+        | "RUNNING"
+        | "COMPLETED"
+        | "FAILED"
+        | "STOPPED"
+        | "CANCELLED";
+
+    current_round: number;
+
+    total_rounds: number;
+
+    started_at?: string | null;
+
+    completed_at?: string | null;
+
+    best_accuracy?: number | null;
+
+    best_loss?: number | null;
+
+}
+
 // ===============================================
 // Runtime State
 // ===============================================
@@ -200,6 +233,10 @@ export type RuntimeAction =
     | {
           type: "CLIENT";
           payload: ClientPayload;
+      }
+    | {
+          type: "TRAINING_JOB_STATUS";
+          payload: TrainingJobStatusPayload;
       }
     | {
           type: "RUNTIME_STATUS";

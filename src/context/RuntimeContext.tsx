@@ -6,8 +6,11 @@ import {
     useMemo,
     useReducer,
     useRef,
+    useState,
     ReactNode,
 } from "react";
+
+import type { TrainingJob } from "../features/training-jobs/types";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -236,6 +239,10 @@ interface RuntimeContextType {
 
     state: RuntimeState;
 
+    selectedJobId: number | null;
+
+    setSelectedJobId: (jobId: number | null) => void;
+
     initializeTrainingJob(
         jobId: number,
         forceRefresh?: boolean,
@@ -274,6 +281,11 @@ export function RuntimeProvider({
             initialRuntimeState,
         );
 
+    const [
+        selectedJobId,
+        setSelectedJobId,
+    ] = useState<number | null>(null);
+
     const queryClient = useQueryClient();
 
     //------------------------------------------------------------------
@@ -287,6 +299,54 @@ export function RuntimeProvider({
 
     const clientsInitialized =
         useRef(false);
+
+    //------------------------------------------------------------------
+// React Query Cache
+//------------------------------------------------------------------
+
+const updateTrainingJobCache =
+    useCallback(
+
+        (
+            jobId: number,
+            updater: (
+                job: TrainingJob,
+            ) => TrainingJob,
+        ) => {
+
+            queryClient.setQueryData<TrainingJob[]>(
+
+                ["training-jobs"],
+
+                jobs => {
+
+                    if (!jobs) {
+
+                        return jobs;
+
+                    }
+
+                    return jobs.map(
+
+                        job =>
+
+                            job.id === jobId
+
+                                ? updater(job)
+
+                                : job,
+
+                    );
+
+                },
+
+            );
+
+        },
+
+        [queryClient],
+
+    );
 
     //------------------------------------------------------------------
     // Runtime Loader
@@ -431,13 +491,128 @@ export function RuntimeProvider({
 
             url: `${WS_API_URL}${WS_RUNTIME_ENDPOINT}`,
 
-            dispatch,
+            dispatch: (action: RuntimeAction) => {
 
-            onTrainingCompleted: () => {
+                //----------------------------------------------------------
+                // Update TrainingJob cache on every completed round
+                //----------------------------------------------------------
 
-                queryClient.invalidateQueries({
-                    queryKey: ["training-jobs"],
-                });
+                if (action.type === "TRAINING_ROUND") {
+
+                    //--------------------------------------------------
+                    // Update Training Jobs list cache
+                    //--------------------------------------------------
+
+                    updateTrainingJobCache(
+
+                        action.payload.job_id,
+
+                        job => ({
+
+                            ...job,
+
+                            status: "RUNNING",
+                            
+                            current_round:
+                                action.payload.round_number,
+
+                            best_accuracy:
+                                action.payload.global_accuracy,
+
+                            best_loss:
+                                action.payload.global_loss,
+
+                        }),
+
+                    );
+
+                    //--------------------------------------------------
+                    // Update Training Job Details cache
+                    //--------------------------------------------------
+
+                    queryClient.setQueryData<TrainingJob>(
+
+                        [
+
+                            "training-job",
+
+                            action.payload.job_id,
+
+                        ],
+
+                        old => {
+
+                            if (!old) {
+
+                                return old;
+
+                            }
+
+                            return {
+
+                                ...old,
+
+                                status: "RUNNING",
+
+                                current_round:
+                                    action.payload.round_number,
+
+                                best_accuracy:
+                                    action.payload.global_accuracy,
+
+                                best_loss:
+                                    action.payload.global_loss,
+
+                            };
+
+                        },
+
+                    );
+
+                }
+                //----------------------------------------------------------
+                // Refresh TrainingJob when training finishes
+                //----------------------------------------------------------
+
+                if (action.type === "TRAINING_EVENT") {
+
+                    switch (action.payload.event_type) {
+
+                        case "TRAINING_COMPLETED":
+
+                        case "TRAINING_FAILED":
+
+                        case "TRAINING_STOPPED":
+
+                        case "TRAINING_CANCELLED":
+
+                            queryClient.invalidateQueries({
+
+                                queryKey: ["training-jobs"],
+
+                            });
+
+                            queryClient.invalidateQueries({
+
+                                queryKey: ["training-job", action.payload.job_id],
+                                
+                            });
+
+                            break;
+
+                        default:
+
+                            break;
+
+                    }
+
+                }
+                
+                //----------------------------------------------------------
+                // Existing reducer
+                //----------------------------------------------------------
+
+                dispatch(action);
 
             },
 
@@ -451,35 +626,7 @@ export function RuntimeProvider({
 
         };
 
-    }, [queryClient]);
-
-    useEffect(() => {
-
-        const allEvents = Object.values(state.trainingEvents)
-            .flat();
-
-        if (allEvents.length === 0) {
-            return;
-        }
-
-        const latest = allEvents[allEvents.length - 1];
-
-        if (
-            latest.event_type === "TRAINING_COMPLETED" ||
-            latest.event_type === "TRAINING_FAILED" ||
-            latest.event_type === "SERVER_STOPPED"
-        ) {
-
-            queryClient.invalidateQueries({
-                queryKey: ["training-jobs"],
-            });
-
-        }
-
-    }, [
-        state.trainingEvents,
-        queryClient,
-    ]);
+    }, [updateTrainingJobCache]);
 
     //------------------------------------------------------------------
     // Context Value
@@ -491,6 +638,10 @@ export function RuntimeProvider({
 
             state,
 
+            selectedJobId,
+
+            setSelectedJobId,
+
             initializeTrainingJob,
 
             initializeClients,
@@ -500,6 +651,8 @@ export function RuntimeProvider({
         [
 
             state,
+
+            selectedJobId,
 
             initializeTrainingJob,
 

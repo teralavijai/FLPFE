@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
     Paper,
@@ -10,47 +10,124 @@ import {
     TableCell,
     Chip,
     Box,
+    FormControl,
+    Select,
+    MenuItem,
+    InputLabel,
+    TableContainer,
+    type SelectChangeEvent,
 } from "@mui/material";
 
-import ListAltIcon from '@mui/icons-material/ListAlt';
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
 import { useNavigate } from "react-router-dom";
 
 import { useTrainingJobs } from "../../training-jobs/hooks/useTrainingJobs";
+
+import type { TrainingJobStatus } from "../../training-jobs/types/trainingJob";
 
 export default function RunningJobsTable() {
 
     const navigate = useNavigate();
 
     const {
-
         data: jobs = [],
-
         isLoading,
-
     } = useTrainingJobs();
 
     //------------------------------------------------------------------
-    // Running Jobs
+    // Status Filter
     //------------------------------------------------------------------
 
-    const runningJobs = useMemo(
+    const [statusFilter, setStatusFilter] =
+        useState<"ALL" | TrainingJobStatus>("ALL");
 
-        () =>
+    const handleFilterChange = (
+        event: SelectChangeEvent,
+    ) => {
 
-            jobs.filter(
+        setStatusFilter(
+            event.target.value as
+                | "ALL"
+                | TrainingJobStatus,
+        );
 
-                job =>
+    };
 
-                    job.status === "RUNNING" ||
+    //------------------------------------------------------------------
+    // Jobs
+    //------------------------------------------------------------------
 
-                    job.status === "STARTING",
+    const filteredJobs = useMemo(() => {
 
-            ),
+        let data = [...jobs];
 
-        [jobs],
+        data.sort((a, b) => {
 
-    );
+            const aTime = a.started_at
+                ? new Date(a.started_at).getTime()
+                : 0;
+
+            const bTime = b.started_at
+                ? new Date(b.started_at).getTime()
+                : 0;
+
+            return bTime - aTime;
+
+        });
+
+        if (statusFilter !== "ALL") {
+
+            data = data.filter(
+
+                job => job.status === statusFilter,
+
+            );
+
+        }
+
+        return data;
+
+    }, [jobs, statusFilter]);
+
+    //------------------------------------------------------------------
+
+    const statusColor = (
+        status: TrainingJobStatus,
+    ):
+        | "success"
+        | "warning"
+        | "error"
+        | "primary"
+        | "default" => {
+
+        switch (status) {
+
+            case "RUNNING":
+                return "success";
+
+            case "STARTING":
+                return "primary";
+
+            case "COMPLETED":
+                return "success";
+
+            case "FAILED":
+                return "error";
+
+            case "CANCELLED":
+                return "default";
+
+            case "STOPPED":
+                return "warning";
+
+            case "CREATED":
+            default:
+                return "default";
+
+        }
+
+    };
 
     //------------------------------------------------------------------
 
@@ -60,120 +137,103 @@ export default function RunningJobsTable() {
 
             <Box
                 display="flex"
+                justifyContent="space-between"
                 alignItems="center"
-                gap={1.5}
                 mb={2}
             >
-                <ListAltIcon
-                    color="primary"
-                    fontSize="small"
-                />
 
-                <Typography
-                    sx={{
-                        fontSize: 30,
-                        fontWeight: 700,
-                    }}
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={1.5}
                 >
-                    Running Jobs
-                </Typography>
+
+                    <ListAltIcon
+                        color="primary"
+                        fontSize="small"
+                    />
+
+                    <Typography
+                        sx={{
+                            fontSize: 30,
+                            fontWeight: 700,
+                        }}
+                    >
+                        Training Jobs
+                    </Typography>
+
+                </Box>
+
+                <FormControl
+                    size="small"
+                    sx={{ minWidth: 150 }}
+                >
+
+                    <InputLabel>
+
+                        Status
+
+                    </InputLabel>
+
+                    <Select
+                        label="Status"
+                        value={statusFilter}
+                        onChange={handleFilterChange}
+                    >
+
+                        <MenuItem value="ALL">
+                            All Jobs
+                        </MenuItem>
+
+                        <MenuItem value="CREATED">
+                            Created
+                        </MenuItem>
+
+                        <MenuItem value="STARTING">
+                            Starting
+                        </MenuItem>
+
+                        <MenuItem value="RUNNING">
+                            Running
+                        </MenuItem>
+
+                        <MenuItem value="COMPLETED">
+                            Completed
+                        </MenuItem>
+
+                        <MenuItem value="FAILED">
+                            Failed
+                        </MenuItem>
+
+                        <MenuItem value="STOPPED">
+                            Stopped
+                        </MenuItem>
+
+                        <MenuItem value="CANCELLED">
+                            Cancelled
+                        </MenuItem>
+
+                    </Select>
+
+                </FormControl>
+
             </Box>
 
-            <Table size="small">
+            <TableContainer
+                sx={{
+                    maxHeight: 280,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 2,
+                }}
+            >
 
-                <TableHead>
+                <Table
+                    size="small"
+                    stickyHeader
+                >
 
-                    <TableRow>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Job ID
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Name
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Strategy
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Status
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Started
-                        </TableCell>
-
-                    </TableRow>
-
-                </TableHead>
-
-                <TableBody>
-
-                    {isLoading && (
-
-                        <TableRow>
-
-                            <TableCell
-                                colSpan={5}
-                            >
-
-                                Loading...
-
-                            </TableCell>
-
-                        </TableRow>
-
-                    )}
-
-                    {!isLoading &&
-                        runningJobs.length === 0 && (
+                    <TableHead>
 
                         <TableRow>
 
@@ -183,22 +243,108 @@ export default function RunningJobsTable() {
                                     fontSize: 13,
                                     letterSpacing: 0.6,
                                     textTransform: "uppercase",
-                                    color: "text.secondary",
-                                    bgcolor: "grey.50",
                                 }}
                             >
-                                
-                                No running jobs.
+                                Job ID
+                            </TableCell>
 
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Name
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Strategy
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Status
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Progress
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Started
                             </TableCell>
 
                         </TableRow>
 
-                    )}
+                    </TableHead>
+                                            <TableBody>
 
-                    {runningJobs.map(
+                        {isLoading && (
 
-                        job => (
+                            <TableRow>
+
+                                <TableCell
+                                    colSpan={6}
+                                >
+                                    Loading...
+                                </TableCell>
+
+                            </TableRow>
+
+                        )}
+
+                        {!isLoading &&
+                            filteredJobs.length === 0 && (
+
+                            <TableRow>
+
+                                <TableCell
+                                    colSpan={6}
+                                    align="center"
+                                    sx={{
+                                        py: 4,
+                                        color: "text.secondary",
+                                    }}
+                                >
+
+                                    No training jobs found.
+
+                                </TableCell>
+
+                            </TableRow>
+
+                        )}
+
+                        {filteredJobs.map(job => (
 
                             <TableRow
 
@@ -207,17 +353,17 @@ export default function RunningJobsTable() {
                                 hover
 
                                 sx={{
-
                                     cursor: "pointer",
 
+                                    "&:last-child td": {
+                                        borderBottom: 0,
+                                    },
                                 }}
 
                                 onClick={() =>
 
                                     navigate(
-
                                         `/training-jobs/${job.id}`,
-
                                     )
 
                                 }
@@ -232,7 +378,13 @@ export default function RunningJobsTable() {
 
                                 <TableCell>
 
-                                    {job.name}
+                                    <Typography
+                                        fontWeight={600}
+                                    >
+
+                                        {job.name}
+
+                                    </Typography>
 
                                 </TableCell>
 
@@ -246,24 +398,17 @@ export default function RunningJobsTable() {
 
                                     <Chip
 
-                                        label={
+                                        label={job.status}
 
-                                            job.status
-
-                                        }
-
-                                        color={
-
-                                            job.status ===
-                                            "RUNNING"
-
-                                                ? "success"
-
-                                                : "warning"
-
-                                        }
+                                        color={statusColor(job.status)}
 
                                         size="small"
+
+                                        variant={
+                                            job.status === "COMPLETED"
+                                                ? "outlined"
+                                                : "filled"
+                                        }
 
                                     />
 
@@ -271,11 +416,17 @@ export default function RunningJobsTable() {
 
                                 <TableCell>
 
+                                    {job.total_rounds > 0
+                                        ? `${job.current_round}/${job.total_rounds}`
+                                        : "-"}
+
+                                </TableCell>
+
+                                <TableCell>
+
                                     {job.started_at
                                         ? new Date(
-
                                               job.started_at,
-
                                           ).toLocaleString()
                                         : "-"}
 
@@ -283,16 +434,19 @@ export default function RunningJobsTable() {
 
                             </TableRow>
 
-                        ),
+                        ))}
 
-                    )}
+                    </TableBody>
 
-                </TableBody>
+                </Table>
 
-            </Table>
+            </TableContainer>
 
             <Box
                 mt={2}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
             >
 
                 <Typography
@@ -300,9 +454,16 @@ export default function RunningJobsTable() {
                     color="text.secondary"
                 >
 
-                    Click a running job to
-                    open its live monitoring
-                    page.
+                    Showing {filteredJobs.length} of {jobs.length} training jobs
+
+                </Typography>
+
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                >
+
+                    Click a job to view its details.
 
                 </Typography>
 

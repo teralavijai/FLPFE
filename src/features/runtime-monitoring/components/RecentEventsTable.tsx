@@ -7,12 +7,13 @@ import {
     Table,
     TableBody,
     TableCell,
+    TableContainer,
     TableHead,
     TableRow,
     Typography,
 } from "@mui/material";
 
-import ListAltIcon from '@mui/icons-material/ListAlt';
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
 import { useTrainingJobs } from "../../training-jobs/hooks/useTrainingJobs";
 import { useRuntime } from "../../../hooks/useRuntime";
@@ -32,7 +33,7 @@ export default function RecentEventsTable() {
     } = useRuntime();
 
     //------------------------------------------------------------------
-    // Collect events from all jobs
+    // Collect events
     //------------------------------------------------------------------
 
     const events = useMemo(() => {
@@ -43,27 +44,23 @@ export default function RecentEventsTable() {
 
         return allEvents
 
-            .sort(
+            .sort((a, b) => {
 
-                (a, b) => {
+                const ta =
+                    a.created_at
+                        ? new Date(a.created_at).getTime()
+                        : 0;
 
-                    const ta =
-                        a.created_at
-                            ? new Date(a.created_at).getTime()
-                            : 0;
+                const tb =
+                    b.created_at
+                        ? new Date(b.created_at).getTime()
+                        : 0;
 
-                    const tb =
-                        b.created_at
-                            ? new Date(b.created_at).getTime()
-                            : 0;
+                return tb - ta;
 
-                    return tb - ta;
+            })
 
-                },
-
-            )
-
-            .slice(0, 100);
+            .slice(0, 200);
 
     }, [
 
@@ -78,118 +75,64 @@ export default function RecentEventsTable() {
     return (
 
         <Paper sx={{ p: 2 }}>
+
             <Box
                 display="flex"
+                justifyContent="space-between"
                 alignItems="center"
-                gap={1.5}
                 mb={2}
             >
-                <ListAltIcon
-                    color="primary"
-                    fontSize="small"
-                />
+
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={1.5}
+                >
+
+                    <ListAltIcon
+                        color="primary"
+                        fontSize="small"
+                    />
+
+                    <Typography
+                        sx={{
+                            fontSize: 30,
+                            fontWeight: 700,
+                        }}
+                    >
+                        Recent Events
+                    </Typography>
+
+                </Box>
 
                 <Typography
-                    sx={{
-                        fontSize: 30,
-                        fontWeight: 700,
-                    }}
+                    variant="body2"
+                    color="text.secondary"
                 >
-                    Recent Events
+
+                    {events.length} events
+
                 </Typography>
+
             </Box>
-            
-            <Table size="small">
 
-                <TableHead>
+            <TableContainer
 
-                    <TableRow>
+                sx={{
+                    maxHeight: 360,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 2,
+                }}
 
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Time
-                        </TableCell>
+            >
 
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Job
-                        </TableCell>
+                <Table
+                    size="small"
+                    stickyHeader
+                >
 
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Round
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Event
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Level
-                        </TableCell>
-
-                        <TableCell
-                            sx={{
-                                fontWeight: 700,
-                                fontSize: 13,
-                                letterSpacing: 0.6,
-                                textTransform: "uppercase",
-                                color: "text.secondary",
-                                bgcolor: "grey.50",
-                            }}
-                        >
-                            Message
-                        </TableCell>
-
-                    </TableRow>
-
-                </TableHead>
-
-                <TableBody>
-
-                    {events.length === 0 && (
+                    <TableHead>
 
                         <TableRow>
 
@@ -199,26 +142,106 @@ export default function RecentEventsTable() {
                                     fontSize: 13,
                                     letterSpacing: 0.6,
                                     textTransform: "uppercase",
-                                    color: "text.secondary",
-                                    bgcolor: "grey.50",
                                 }}
                             >
+                                Time
+                            </TableCell>
 
-                                No events available.
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Job
+                            </TableCell>
 
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Round
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Event
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Level
+                            </TableCell>
+
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    letterSpacing: 0.6,
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Message
                             </TableCell>
 
                         </TableRow>
 
-                    )}
+                    </TableHead>
+                                        <TableBody>
 
-                    {events.map(
+                        {events.length === 0 && (
 
-                        (event, index) => (
+                            <TableRow>
+
+                                <TableCell
+                                    colSpan={6}
+                                    align="center"
+                                    sx={{
+                                        py: 5,
+                                        color: "text.secondary",
+                                    }}
+                                >
+
+                                    No runtime events available.
+
+                                </TableCell>
+
+                            </TableRow>
+
+                        )}
+
+                        {events.map((event, index) => (
 
                             <TableRow
+
                                 key={`${event.job_id}-${index}`}
+
                                 hover
+
+                                sx={{
+                                    "&:last-child td": {
+                                        borderBottom: 0,
+                                    },
+                                }}
+
                             >
 
                                 <TableCell>
@@ -255,19 +278,29 @@ export default function RecentEventsTable() {
 
                                         color={
 
-                                            event.event_type.includes(
-                                                "FAILED",
-                                            )
+                                            event.event_type.includes("FAILED")
 
                                                 ? "error"
 
-                                                : event.event_type.includes(
-                                                      "COMPLETED",
-                                                  )
+                                                : event.event_type.includes("COMPLETED")
 
                                                 ? "success"
 
-                                                : "primary"
+                                                : event.event_type.includes("START")
+
+                                                ? "primary"
+
+                                                : "default"
+
+                                        }
+
+                                        variant={
+
+                                            event.event_type.includes("COMPLETED")
+
+                                                ? "outlined"
+
+                                                : "filled"
 
                                         }
 
@@ -285,13 +318,11 @@ export default function RecentEventsTable() {
 
                                         color={
 
-                                            event.event_level ===
-                                            "ERROR"
+                                            event.event_level === "ERROR"
 
                                                 ? "error"
 
-                                                : event.event_level ===
-                                                  "WARNING"
+                                                : event.event_level === "WARNING"
 
                                                 ? "warning"
 
@@ -299,25 +330,64 @@ export default function RecentEventsTable() {
 
                                         }
 
+                                        variant="outlined"
+
                                     />
 
                                 </TableCell>
 
-                                <TableCell>
+                                <TableCell
+                                    sx={{
+                                        maxWidth: 500,
+                                    }}
+                                >
 
-                                    {event.message}
+                                    <Typography
+                                        variant="body2"
+                                    >
+
+                                        {event.message}
+
+                                    </Typography>
 
                                 </TableCell>
 
                             </TableRow>
 
-                        ),
+                        ))}
 
-                    )}
+                    </TableBody>
 
-                </TableBody>
+                </Table>
 
-            </Table>
+            </TableContainer>
+
+            <Box
+                mt={2}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+            >
+
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                >
+
+                    Showing latest {events.length} runtime events
+
+                </Typography>
+
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                >
+
+                    Events are updated automatically through the Runtime WebSocket.
+
+                </Typography>
+
+            </Box>
 
         </Paper>
 
