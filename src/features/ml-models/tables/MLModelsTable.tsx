@@ -63,11 +63,15 @@ export default function MLModelsTable({
         },
 
         {
-            field: "framework",
-            headerName: "Framework",
+            field: "fl_framework",
+            headerName: "FL Framework",
             width: 160,
         },
-
+        {
+            field: "ml_framework",
+            headerName: "ML Framework",
+            width: 160,
+        },
         {
             field: "task_type",
             headerName: "Task",

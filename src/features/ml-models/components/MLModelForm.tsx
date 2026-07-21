@@ -44,9 +44,9 @@ const defaultValues: CreateMLModelRequest = {
 
     description: "",
 
-    framework: "",
+    fl_framework: "",
 
-    architecture: "",
+    ml_framework: "",
 
     task_type: "",
 
@@ -111,10 +111,10 @@ export default function MLModelForm({
             description:
                 model.description ?? "",
 
-            framework: model.framework,
+            fl_framework: model.fl_framework,
 
-            architecture:
-                model.architecture ?? "",
+            ml_framework:
+                model.ml_framework ?? "",
 
             task_type:
                 model.task_type,
@@ -246,19 +246,19 @@ export default function MLModelForm({
                     <Grid size={{ xs:12, md:4 }}>
 
                         <Controller
-                            name="framework"
+                            name="fl_framework"
                             control={control}
                             render={({ field }) => (
 
                                 <TextField
                                     {...field}
                                     select
-                                    label="Framework"
+                                    label="FL Framework"
                                     disabled={readonly}
                                     fullWidth
                                 >
 
-                                    {lookups?.frameworks.map(
+                                    {lookups?.fl_frameworks.map(
                                         item => (
 
                                             <MenuItem
@@ -313,19 +313,35 @@ export default function MLModelForm({
 
                     </Grid>
 
-                    <Grid size={{ xs:12, md:4 }}>
+                   <Grid size={{ xs:12, md:4 }}>
 
                         <Controller
-                            name="architecture"
+                            name="ml_framework"
                             control={control}
                             render={({ field }) => (
 
                                 <TextField
                                     {...field}
-                                    label="Architecture"
+                                    select
+                                    label="ML Framework"
                                     disabled={readonly}
                                     fullWidth
-                                />
+                                >
+
+                                    {lookups?.ml_frameworks.map(
+                                        item => (
+
+                                            <MenuItem
+                                                key={item.value}
+                                                value={item.value}
+                                            >
+                                                {item.label}
+                                            </MenuItem>
+
+                                        )
+                                    )}
+
+                                </TextField>
 
                             )}
                         />
